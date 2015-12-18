@@ -77,14 +77,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 
 
-  void st7565_init(void);
-  void begin(uint8_t contrast);    // muss aufgerufen werden am anfang
+  void st7565_init(uint8_t contrast); 
   void st7565_command(uint8_t c);
   void st7565_data(uint8_t c);
   void st7565_set_brightness(uint8_t val);
-  void clear_display(void);
-  void clear();                 // macht screen leer
-  void display();               // muss aufgerufen werden für screenUpdate
+  void st7565_clear_display(void);
+  void st7565_clear();                 // macht screen leer
+  void st7565_display();               // muss aufgerufen werden für screenUpdate
 
   void setpixel(uint8_t x, uint8_t y, uint8_t color);
   uint8_t getpixel(uint8_t x, uint8_t y);
@@ -100,17 +99,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 		uint8_t color);
   void drawchar(uint8_t x, uint8_t line, char c);
   void drawstring(uint8_t x, uint8_t line, char *c);
-  void drawstring_P(uint8_t x, uint8_t line, const char *c);
-
-  void drawbitmap(uint8_t x, uint8_t y, 
-		  const uint8_t *bitmap, uint8_t w, uint8_t h,
-		  uint8_t color);
-
- 
- 
-
-  //uint8_t buffer[128*64/8]; 
-
 
 
 #endif
