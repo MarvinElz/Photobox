@@ -130,19 +130,7 @@ static void updateBoundingBox(uint8_t xmin, uint8_t ymin, uint8_t xmax, uint8_t 
 #endif
 }
 
-drawbitmap(uint8_t x, uint8_t y, const uint8_t *bitmap, uint8_t w, uint8_t h, uint8_t color) {
-    uint8_t j;
-    uint8_t i;
-  for (j=0; j<h; j++) {
-    for ( i=0; i<w; i++ ) {
-      if (pgm_read_byte(bitmap + i + (j/8)*w) & _BV(j%8)) {
-	my_setpixel(x+i, y+j, color);
-      }
-    }
-  }
 
-  updateBoundingBox(x, y, x+w, y+h);
-}
 
 drawstring(uint8_t x, uint8_t line, char *c) {
   while (c[0] != 0) {
@@ -158,27 +146,10 @@ drawstring(uint8_t x, uint8_t line, char *c) {
   }
 }
 
-
-drawstring_P(uint8_t x, uint8_t line, const char *str) {
-  while (1) {
-    char c = pgm_read_byte(str++);
-    if (! c)
-      return;
-    drawchar(x, line, c);
-    x += 6; // 6 pixels wide
-    if (x + 6 >= LCDWIDTH) {
-      x = 0;    // ran out of this line
-      line++;
-    }
-    if (line >= (LCDHEIGHT/8))
-      return;        // ran out of space :(
-  }
-}
-
 drawchar(uint8_t x, uint8_t line, char c) {
     uint8_t i;
   for ( i =0; i<5; i++ ) {
-    st7565_buffer[x + (line*128) ] = pgm_read_byte(font+(c*5)+i);
+    st7565_buffer[x + (line*128) ] = font[c*5+i];
     x++;
   }
 
@@ -346,9 +317,9 @@ void my_setpixel(uint8_t x, uint8_t y, uint8_t color) {
 
   // x is which column
   if (color) 
-    st7565_buffer[x+ (y/8)*128] |= _BV(7-(y%8));  
+    st7565_buffer[x+ (y/8)*128] |= 1 << (7-(y%8));  
   else
-    st7565_buffer[x+ (y/8)*128] &= ~_BV(7-(y%8)); 
+    st7565_buffer[x+ (y/8)*128] &= ~ 1 << (7-(y%8)); 
 }
 
 // the most basic function, set a single pixel
@@ -358,9 +329,9 @@ void setpixel(uint8_t x, uint8_t y, uint8_t color) {
 
   // x is which column
   if (color) 
-    st7565_buffer[x+ (y/8)*128] |= _BV(7-(y%8));  
+    st7565_buffer[x+ (y/8)*128] |= 1 << (7-(y%8));  
   else
-    st7565_buffer[x+ (y/8)*128] &= ~_BV(7-(y%8)); 
+    st7565_buffer[x+ (y/8)*128] &= ~ 1 << (7-(y%8)); 
 
   updateBoundingBox(x,y,x,y);
 }
@@ -374,15 +345,7 @@ uint8_t getpixel(uint8_t x, uint8_t y) {
   return (st7565_buffer[x+ (y/8)*128] >> (7-(y%8))) & 0x1;  
 }
 
-
-begin(uint8_t contrast) {
-  st7565_init();
-  st7565_command(CMD_DISPLAY_ON);
-  st7565_command(CMD_SET_ALLPTS_NORMAL);
-  st7565_set_brightness(contrast);
-}
-
-st7565_init(void) {
+void st7565_init(uint8_t contrast) {
   // set pin directions
   GLCD_CS1_DDR   |= ( 1 << GLCD_CS1_PIN);
   GLCD_RESET_DDR |= ( 1 << GLCD_RESET_PIN);
@@ -441,7 +404,11 @@ st7565_init(void) {
 
   // set up a bounding box for screen updates
 
-  updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);
+  updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);  
+  
+  st7565_command(CMD_DISPLAY_ON);
+  st7565_command(CMD_SET_ALLPTS_NORMAL);
+  st7565_set_brightness(contrast);
 }
 
 inline void spiwrite(uint8_t c) {
@@ -449,80 +416,23 @@ inline void spiwrite(uint8_t c) {
   
   int8_t i;
   for (i=7; i>=0; i--) {
-	//SET_BIT( &GLCD_SCL_PORT, GLCD_SCL_PIN, 0);   
-    GLCD_SCL_PORT &= ~_BV(GLCD_SCL_PIN);
-    if (c & _BV(i))
-      GLCD_SDA_PORT |= _BV(GLCD_SDA_PIN);
+	//SET_BIT( &GLCD_SCL_PORT, GLCD_SCL_PIN, 0); 
+
+    
+    GLCD_SCL_PORT &= ~_BV(GLCD_SCL_PIN);  // SCL -> LOW
+    
+    if (c & 1 << i) // wenn jeweiliges bit == HIGH
+      GLCD_SDA_PORT |= _BV(GLCD_SDA_PIN);  // SDA -> HIGH
     else
-      GLCD_SDA_PORT &= ~_BV(GLCD_SDA_PIN);
-    GLCD_SCL_PORT |= _BV(GLCD_SCL_PIN);
+      GLCD_SDA_PORT &= ~_BV(GLCD_SDA_PIN);  // SDA -> LOW
+            
+    GLCD_SCL_PORT |= _BV(GLCD_SCL_PIN);  // SCL -> HIGH
   }
   
-
-  /*
-  // loop unwrapped! too fast doesnt work :(
- 
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(7))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(6))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
- 
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(5))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(4))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(3))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(2))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-
-
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(1))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-
-  SCLK_PORT &= ~_BV(SCLK);
-  if (c & _BV(0))
-    SID_PORT |= _BV(SID);
-  else
-    SID_PORT &= ~_BV(SID);
-  SCLK_PORT |= _BV(SCLK);
-*/
-
 }
+
 void st7565_command(uint8_t c) {
-  //digitalWrite(a0, LOW);
+  //digitalWrite(a0, LOW);  
   SET_BIT( &GLCD_A0_PORT, GLCD_A0_PIN, 0);
   spiwrite(c);
 }
@@ -538,7 +448,7 @@ void st7565_set_brightness(uint8_t val) {
 }
 
 
-void display(void) {
+void st7565_display(void) {
   uint8_t col, maxcol, p;
 
   /*
@@ -596,14 +506,14 @@ void display(void) {
 }
 
 // clear everything
-void clear(void) {
+void st7565_clear(void) {
   memset(st7565_buffer, 0, 1024);
   updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);
 }
 
 
 // this doesnt touch the buffer, just clears the display RAM - might be handy
-void clear_display(void) {
+void st7565_clear_display(void) {
   uint8_t p, c;
   
   for(p = 0; p < 8; p++) {
