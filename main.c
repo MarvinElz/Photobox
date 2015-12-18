@@ -10,7 +10,7 @@ struct line{
 
 vector<line> haltestelle;
 
-// TODO: include Boost or other internet-library http://www.boost.org/
+// TODO: include cURL
 // TODO: try do reach http Webside
 // TODO: parse information
 // TODO: get Raspberry GPIO Running http://raspberrypiguide.de/howtos/raspberry-pi-gpio-how-to/
