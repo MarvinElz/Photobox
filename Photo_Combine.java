@@ -44,10 +44,10 @@ public class Photo_Combine {
 		g.setColor(bg);
 		g.fillRect(0, 0, combined_width, combined_height);
 
-		g.drawImage(img1, 0, 0, width, height, null);
-		g.drawImage(img2, width + margin, 0, width, height, null);
-		g.drawImage(img3, 0, height + margin, width, height, null);
-		g.drawImage(img4, width + margin, height + margin, width, height, null);
+		g.drawImage(img2, 0, 0, width, height, null); // oben links
+		g.drawImage(img4, width + margin, 0, width, height, null); // oben rechts
+		g.drawImage(img1, 0, height + margin, width, height, null); // unten links
+		g.drawImage(img3, width + margin, height + margin, width, height, null); // unten rechts
 
 		g.dispose();
 
