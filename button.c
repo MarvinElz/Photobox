@@ -5,39 +5,64 @@
 #include <unistd.h>
 #include <wiringPi.h>
 #include <string>
+#include <string.h>
 #include "button.h"
+#include "sharedMemory.h"
 
 using namespace std;
 
-int counter = 1;
+char bUploadState, bStartState;
 
-int main(int argc, char** argv){
-  cout << "Hallo Welt" << endl;
-  int bUploadState, bStartState;
-  bUploadState = 0;
-  bStartState = 0;
-  wiringPiSetup();
-
-  // set pin directions
+void initButton(){
+   // set pin directions
   pinMode(bUpload, INPUT);
   pinMode(bStart , INPUT);
+  bUploadState = 0;
+  bStartState = 0;
+}
+
+char UploadButtonPressed(){
+  if( !bUploadState && (bUploadState = digitalRead(bUpload)) )
+    return 1;
+  else
+    bUploadState = digitalRead(bUpload);
+  return 0; 
+}   
+
+char StartButtonPressed(){
+  if( !bStartState  && (bStartState  = digitalRead(bStart)) )
+    return 1;
+  else
+    bStartState  = digitalRead(bStart);
+  return 0;
+}
+  
+
+int main(int argc, char** argv){
+
+  int shID;
+  SM *SMPtr;
+
+  char StartButtonClicked = 0;
+  char UploadButtonClicked = 0;
+  
+  wiringPiSetup();
+  initButton();
 
   while(1){
-   
-    if( !bUploadState && (bUploadState = digitalRead(bUpload)) )
-      cout << "bUpload pressed" << endl;
-    else
-      bUploadState = digitalRead(bUpload);
- 
-    if( !bStartState  && (bStartState  = digitalRead(bStart)) )
-      cout << "bStart pressed" << endl;
-    else
-      bStartState  = digitalRead(bStart);
 
+    // allocate memory
+    shID = shmget(2404, MAXSM, 0666); 
+    SMPtr = (SM*)shmat(shID, 0, 0); 
+  
+    if( UploadButtonPressed() ) SMPtr->UploadButtonPressed = 1;
+    if( StartButtonPressed()  ) SMPtr->StartButtonPressed  = 1;
+     
+    // deallocate memory
+    shmdt(SMPtr); 
     usleep(1000);
   }
-
   
-   
+
 
 }
