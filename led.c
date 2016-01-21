@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include <wiringPi.h>
 #include <string>
+#include <string.h>
 #include "led.h"
+#include "sharedMemory.h"
 
 using namespace std;
-
-int counter = 1;
 
 char table[] = { 
 		  0x3f,  // 00111111  (0)
@@ -74,12 +74,7 @@ void write( char value ){
   digitalWrite(DP,   table[value] & (1<<7) );    
 }
 
-int main(int argc, char** argv){
-  cout << "Hallo Welt" << endl;
-
-  
-  wiringPiSetup();
-
+void init_LED(){
     // set pin directions
   pinMode(segA, OUTPUT);
   pinMode(segB, OUTPUT);
@@ -89,17 +84,37 @@ int main(int argc, char** argv){
   pinMode(segF, OUTPUT);
   pinMode(segG, OUTPUT);
   pinMode(DP  , OUTPUT);    
+}
 
+int main(int argc, char** argv){
   
-  char i = 10;
-  while(i--){
-    write(i);
-    sleep(1);
-  }
-  
-  spin(10);
+  int shID;
+  SM *SMPtr;
+
+  wiringPiSetup();
+  init_LED();
 
   clear();
-   
+  SM localSM;
 
+
+  while(1){
+    // allocate memory
+    shID = shmget(2404, MAXSM, 0666); 
+    SMPtr = (SM*)shmat(shID, 0, 0);
+
+    // copy shared memory to local space
+    memcpy( &localSM, SMPtr, MAXSM );
+
+    // deallocate memory
+    shmdt(SMPtr);
+
+    if( localSM.LED_Number <= 9 )
+      write( localSM.LED_Number );
+    if( localSM.LED_Spin )
+      spin(1);
+   
+    usleep(1000);
+  }
 }
+
