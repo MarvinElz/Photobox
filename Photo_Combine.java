@@ -1,3 +1,5 @@
+package photo_combine;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -8,7 +10,7 @@ import javax.imageio.ImageIO;
 
 public class PhotoCombine {
 
-	private final static int margin = 85;
+	private final static int margin = 80;
 	private final static Color bg = Color.WHITE;
 
 	public static void main(String[] args) {
@@ -36,12 +38,9 @@ public class PhotoCombine {
 		int combined_height = height * 2 + margin;
 		int combined_width = width * 2 + margin;
 
-		double scale = (double) height / combined_height;
-
-		BufferedImage combined = new BufferedImage(width, height, img1.getType());
+		BufferedImage combined = new BufferedImage(combined_width, combined_height, img1.getType());
 		Graphics2D g = combined.createGraphics();
-		
-		g.scale(scale, scale);
+
 		g.setColor(bg);
 		g.fillRect(0, 0, combined_width, combined_height);
 
@@ -52,6 +51,17 @@ public class PhotoCombine {
 
 		g.dispose();
 
-		ImageIO.write(combined, "jpg", new File(pathOutput + name + ".jpg"));
+		// Bild auf original größe skalieren
+
+		BufferedImage scaled = new BufferedImage(width, height, img1.getType());
+		Graphics2D gScaled = scaled.createGraphics();
+
+		double scale = (double) height / combined_height;
+
+		g.scale(scale, scale);
+		gScaled.drawImage(combined, 0, 0, width, height, null);
+		gScaled.dispose();
+
+		ImageIO.write(scaled, "jpg", new File(pathOutput + name + ".jpg"));
 	}
 }
