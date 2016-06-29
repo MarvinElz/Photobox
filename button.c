@@ -21,6 +21,8 @@ void initButton(){
   bStartState = 0;
 }
 
+// returns 1 if button is pressed but wasn't last time i checked
+// returns 0 else
 char UploadButtonPressed(){
   if( !bUploadState && (bUploadState = digitalRead(bUpload)) )
     return 1;
@@ -29,6 +31,8 @@ char UploadButtonPressed(){
   return 0; 
 }   
 
+// returns 1 if button is pressed but wasn't last time i checked
+// returns 0 else
 char StartButtonPressed(){
   if( !bStartState  && (bStartState  = digitalRead(bStart)) )
     return 1;

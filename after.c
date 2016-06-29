@@ -9,6 +9,8 @@
 #include "sharedMemory.h"
 #include <sys/time.h>
 #include <unistd.h>
+#include <fstream>
+
 
 using namespace std;
 
@@ -20,22 +22,28 @@ int shID;
 SM *SMPtr;
 SM localSM;
 
+// Commands for editing picutres
 string edit[] = {"sudo java -jar PhotoCombine.jar ",
 		 " /home/pi/Desktop/Photobox/aktuell/raw/ /home/pi/Desktop/Photobox/aktuell/edit/" };
-string print[] = {"lp -d HP_Officejet_6500_E710a-f -o position=bottom /home/pi/Desktop/Photobox/aktuell/edit/",
+		 		 
+// Commands for printing				  
+string print[] = {"lp -d HP_Officejet_6500_E710a-f -o fit-to-page -o position=bottom /home/pi/Desktop/Photobox/aktuell/edit/",
 		  ".jpg &"};
 
 // arg: name of image
 int main(int argc, char** argv){
   //edit pictures
-  system( ( edit[0] + (string)argv[1] + edit[1] ) .c_str());
-  
-  // Display created photo
-  cout << "Display image" << endl;
-  // system(feh ...
+  system( ( edit[0] + (string)argv[1] + edit[1] ) .c_str());   
    
   cout << "Print: " << ( print[0] + (string)argv[1] + print[1] ) .c_str() << endl;
+  
+  // print picture
   system( ( print[0] + (string)argv[1] + print[1] ) .c_str());
+
+  return 0;
+}
+
+/*  code for saving pictures that should be uploaded later
 
   // allocate memory
   shID = shmget(2404, MAXSM, 0666);
@@ -47,14 +55,20 @@ int main(int argc, char** argv){
 
   gettimeofday(&start, NULL);
     
-
   do{      
     if( !localSM.UploadButtonPressed )
     {   
        SMPtr = (SM*)shmat(shID, 0, 0);
        if( SMPtr->UploadButtonPressed ){   
          localSM.UploadButtonPressed = 1;
-	 cout << "Upload" << endl;      
+	 // write to file
+	 ofstream out("uploadList.txt", ios::out |ios::app);  
+  	 if( out )
+	 {
+	   out << argv[1] << endl;
+	 }
+	 out.close();
+   
        }
        shmdt(SMPtr);   
     }
@@ -64,6 +78,4 @@ int main(int argc, char** argv){
   
   // Display deaktivieren
   cout << "Display off" << endl;
-
-  return 0;
-}
+*/

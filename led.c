@@ -109,8 +109,11 @@ int main(int argc, char** argv){
     // deallocate memory
     shmdt(SMPtr);
 
+    // if a number should be shown
     if( localSM.LED_Number <= 9 )
       write( localSM.LED_Number );
+	  
+	// if a spin-animation should be shown  
     if( localSM.LED_Spin )
       spin(1);
    

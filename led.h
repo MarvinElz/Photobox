@@ -1,6 +1,7 @@
 #ifndef _LED_H_
 #define _LED_H_
 
+// WiringPi Pins for LED-Display
 #define segA 26
 #define segB 22
 #define segC 25
