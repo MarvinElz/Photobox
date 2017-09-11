@@ -25,6 +25,9 @@ SM localSM;
 // Commands for editing picutres
 string edit[] = {"sudo java -jar PhotoCombine.jar ",
 		 " /home/pi/Desktop/Photobox/aktuell/raw/ /home/pi/Desktop/Photobox/aktuell/edit/" };
+
+string show[] = {"sudo ./show /home/pi/Desktop/Photobox/aktuell/edit/",
+		 ".jpg"};
 		 		 
 // Commands for printing				  
 string print[] = {"lp -d HP_Officejet_6500_E710a-f -o fit-to-page -o position=bottom /home/pi/Desktop/Photobox/aktuell/edit/",
@@ -34,11 +37,13 @@ string print[] = {"lp -d HP_Officejet_6500_E710a-f -o fit-to-page -o position=bo
 int main(int argc, char** argv){
   //edit pictures
   system( ( edit[0] + (string)argv[1] + edit[1] ) .c_str());   
-   
+
   cout << "Print: " << ( print[0] + (string)argv[1] + print[1] ) .c_str() << endl;
   
   // print picture
   system( ( print[0] + (string)argv[1] + print[1] ) .c_str());
+
+  system( (show[0] + (string)argv[1] + show[1] ) .c_str() );
 
   return 0;
 }
