@@ -1,0 +1,1 @@
+hier werden die bearbeiteten/zusammengeschnittenen Bilder gespeichert
