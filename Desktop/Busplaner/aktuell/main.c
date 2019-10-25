@@ -20,6 +20,9 @@ using namespace std;
 typedef vector<string> line;
 
 void parseHTML(  );
+void remove_UTF_characters(char* text){
+	
+}
 
 struct hst{
    char name[128];
@@ -71,9 +74,8 @@ void getInformation( ){
 
 
 int main(int argc, char** argv){
-  cout << "Hallo Welt" << endl;
+  cout << "Busplaner gestartet" << endl;
   
-
   wiringPiSetup();
 
   // initialize screen
@@ -82,13 +84,12 @@ int main(int argc, char** argv){
   time_t start;
 
   // main-loop
-  while(1){
-  
+  while(1){ 
 
     body.clear();
 
     start = time(NULL);
-    thread threadgetInfo ( getInformation );
+    thread threadgetInfo( getInformation );
     while( time(NULL) - start < 6 && !threadgetInfo.joinable() ){
       sleep(1);	
     }
@@ -97,10 +98,9 @@ int main(int argc, char** argv){
     else
        continue;
 
-
     haltestelle.clear();
     start = time(NULL);      
-    thread threadparse ( parseHTML );
+    thread threadparse( parseHTML );
     while( time(NULL) - start < 6 && !threadparse.joinable() ){
       sleep(1);	
     }
@@ -162,9 +162,28 @@ void createText(char* text, const line lineInfo)
   char *c = text;
   unsigned s = 0;
   for( unsigned i = 0; i < min(2, lineInfo.size() ); i++ ){
-     for( unsigned s = 0; s < lineInfo[i].size(); s++ ){         
-        *c = lineInfo[i].at(s); // copy string
-	c++;
+     for( unsigned s = 0; s < lineInfo[i].size(); s++ ){ 
+			if( lineInfo[i].at(s) == 0xC3 ){  // UTF Umlaut
+				switch (lineInfo[i].at(s+1)){
+				case 0x84:
+					*c = 'A'; c++; *c = 'e'; s++; break;
+				case 0x96:
+					*c = 'O'; c++; *c = 'e'; s++; break;	
+				case 0x9C:
+					*c = 'U'; c++; *c = 'e'; s++; break;	
+				case 0xA4:
+					*c = 'a'; c++; *c = 'e'; s++; break;		
+				case 0xB6:
+					*c = 'o'; c++; *c = 'e'; s++; break;	
+				case 0xBC:
+					*c = 'u'; c++; *c = 'e'; s++; break;
+				default: 
+					cout << "UTF-Charakter nicht unterstuetzt" << endl; 
+				}        
+			}else{
+				*c = lineInfo[i].at(s); // copy string				
+			}
+			c++;
      }
      *c++ = ' ';
   }
